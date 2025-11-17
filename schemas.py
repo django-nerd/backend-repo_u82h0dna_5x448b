@@ -1,48 +1,58 @@
 """
-Database Schemas
+Database Schemas for Custom Children's Stories
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model represents a MongoDB collection.
+Collection name is the lowercase of the class name.
 """
-
+from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
-from typing import Optional
 
-# Example schemas (replace with your own):
 
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+class Tier(BaseModel):
+    name: Literal["Spark", "Glow", "Shine", "Supernova"] = Field(..., description="Tier name")
+    price: float = Field(..., ge=0, description="Price in USD")
+    features: List[str] = Field(default_factory=list, description="Included features")
+    delivery_days: int = Field(7, ge=1, description="Estimated delivery time in days")
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class Character(BaseModel):
+    key: str = Field(..., description="Unique key identifier, kebab-case")
+    name: str = Field(..., description="Display name")
+    era: Optional[str] = Field(None, description="Folktale/fairytale era or origin")
+    tags: List[str] = Field(default_factory=list, description="Search tags")
+    thumbnail: Optional[str] = Field(None, description="Optional image url")
+    description: Optional[str] = Field(None, description="Short blurb")
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+
+class StoryOrder(BaseModel):
+    parent_name: str
+    parent_email: str
+    child_name: str
+    child_age: int = Field(..., ge=0, le=14)
+    tier: Literal["Spark", "Glow", "Shine", "Supernova"]
+    character_key: str
+    adventure_theme: str = Field(..., description="Adventure the child will go on")
+    lesson_theme: str = Field(..., description="Core lesson to learn")
+    word_count: Literal[500, 800, 1200, 2000]
+    illustration_style: Literal[
+        "storybook-classic",
+        "watercolor",
+        "comic",
+        "paper-cut",
+        "digital-paint"
+    ] = "storybook-classic"
+    color_palette: Literal["pastel", "vibrant", "earthy", "primary"] = "pastel"
+    dedication: Optional[str] = None
+    languages: List[Literal["en", "es", "fr", "de", "it"]] = ["en"]
+    include_child_appearance: bool = True
+    child_traits: List[str] = Field(default_factory=list, description="Traits to reflect in the story")
+    accessibility: List[Literal["dyslexia-friendly", "high-contrast", "large-text"]] = Field(default_factory=list)
+    delivery_format: Literal["pdf", "epub", "web"] = "pdf"
+    notes: Optional[str] = None
+
+
+class OrderStatus(BaseModel):
+    order_id: str
+    status: Literal["received", "processing", "illustrating", "ready"] = "received"
+    download_url: Optional[str] = None
+    preview_images: List[str] = Field(default_factory=list)
